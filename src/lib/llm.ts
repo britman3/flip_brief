@@ -1,6 +1,13 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { type ZodIssue } from 'zod'
 import { BriefOutputSchema, type WizardInput, type BriefOutput, DISPLAY_LABELS } from './schema'
+import {
+  getLandRegistrySoldPrices,
+  calculatePostcodeStats,
+  getEPCData,
+  calculateEPCStats,
+  type PostcodeStats,
+} from './data-providers'
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -10,13 +17,13 @@ const SYSTEM_PROMPT = `You are a UK property flip expert generating structured J
 
 CRITICAL RULES:
 1. Output ONLY valid JSON matching the exact schema provided. No markdown, no explanations.
-2. No web browsing - use your knowledge of UK property markets.
+2. Use the REAL MARKET DATA provided when available - this is from Land Registry and EPC databases.
 3. Use conservative estimates and label confidence levels honestly.
 4. Prefer actionable, UK-flip oriented language.
 5. All content must fit on one A4 page - keep text concise.
 6. Focus on areas within the specified travel time from the starting location.
 7. Consider train links for commuter towns if travel mode includes train.
-8. Use realistic UK property prices for 2024-2025 market conditions.
+8. When real data is provided, use it to validate and adjust your price estimates.
 
 SHORTLIST RULES:
 - Exactly 3 areas ranked by suitability
@@ -147,8 +154,126 @@ IMPORTANT: Return ONLY the JSON object, no other text.`
   return prompt
 }
 
+/**
+ * Map property type from wizard to data provider format
+ */
+function mapPropertyType(
+  wizardType: string
+): 'terraced' | 'semi' | 'detached' | 'flat' | undefined {
+  switch (wizardType) {
+    case '2_bed_terrace':
+    case '3_bed_terrace':
+      return 'terraced'
+    case '2_bed_semi':
+      return 'semi'
+    default:
+      return undefined
+  }
+}
+
+/**
+ * Format market data for inclusion in prompt
+ */
+function formatMarketData(
+  postcodes: string[],
+  statsMap: Map<string, { soldStats: PostcodeStats | null; epcStats: ReturnType<typeof calculateEPCStats> }>
+): string {
+  let dataSection = '\n\nREAL MARKET DATA (from Land Registry & EPC database):\n'
+  let hasData = false
+
+  for (const postcode of postcodes) {
+    const data = statsMap.get(postcode)
+    if (!data) continue
+
+    if (data.soldStats) {
+      hasData = true
+      const stats = data.soldStats
+      dataSection += `\n${postcode}:\n`
+      dataSection += `  - Avg sold price (last 24 months): £${stats.averagePrice.toLocaleString()}\n`
+      dataSection += `  - Price range: £${stats.minPrice.toLocaleString()} - £${stats.maxPrice.toLocaleString()}\n`
+      dataSection += `  - Transactions: ${stats.transactionCount}\n`
+
+      if (stats.pricesByType.terraced) {
+        dataSection += `  - Terraced avg: £${stats.pricesByType.terraced.toLocaleString()}\n`
+      }
+      if (stats.pricesByType.semi) {
+        dataSection += `  - Semi avg: £${stats.pricesByType.semi.toLocaleString()}\n`
+      }
+    }
+
+    if (data.epcStats) {
+      hasData = true
+      dataSection += `  - Avg EPC rating: ${data.epcStats.averageRating}\n`
+      dataSection += `  - Properties with poor EPC (D-G): ${data.epcStats.poorRatingCount}\n`
+    }
+  }
+
+  if (!hasData) {
+    return '\n\nNote: No real market data available for these postcodes. Use your knowledge for estimates.'
+  }
+
+  dataSection += '\nUse this real data to inform your price estimates and confidence ratings.'
+  return dataSection
+}
+
+/**
+ * Fetch market data for candidate postcodes near the starting location
+ */
+async function fetchMarketData(
+  startingLocation: string,
+  propertyType: string
+): Promise<{ postcodes: string[]; statsMap: Map<string, { soldStats: PostcodeStats | null; epcStats: ReturnType<typeof calculateEPCStats> }> }> {
+  // Extract potential postcode prefixes from the starting location
+  // This is a simplified approach - in production you'd use a geocoding API
+  const postcodeMatch = startingLocation.match(/[A-Z]{1,2}\d{1,2}/i)
+
+  const postcodes: string[] = []
+
+  if (postcodeMatch) {
+    postcodes.push(postcodeMatch[0].toUpperCase())
+  }
+
+  // If no postcode found, we'll rely on AI knowledge
+  if (postcodes.length === 0) {
+    return { postcodes: [], statsMap: new Map() }
+  }
+
+  const mappedType = mapPropertyType(propertyType)
+  const statsMap = new Map()
+
+  for (const postcode of postcodes) {
+    try {
+      console.log(`Fetching market data for ${postcode}...`)
+
+      // Fetch Land Registry data
+      const soldPrices = await getLandRegistrySoldPrices(postcode, mappedType, 24)
+      const soldStats = calculatePostcodeStats(postcode, soldPrices)
+
+      // Fetch EPC data
+      const epcData = await getEPCData(postcode)
+      const epcStats = calculateEPCStats(epcData)
+
+      statsMap.set(postcode, { soldStats, epcStats })
+
+      console.log(`Found ${soldPrices.length} sold prices and ${epcData.length} EPC records for ${postcode}`)
+    } catch (error) {
+      console.error(`Error fetching data for ${postcode}:`, error)
+    }
+  }
+
+  return { postcodes, statsMap }
+}
+
 export async function generateBrief(input: WizardInput): Promise<BriefOutput> {
-  const userPrompt = buildUserPrompt(input)
+  // Fetch real market data
+  console.log('Fetching market data from Land Registry and EPC...')
+  const { postcodes, statsMap } = await fetchMarketData(input.startingLocation, input.propertyType)
+
+  // Build prompt with market data
+  let userPrompt = buildUserPrompt(input)
+  if (postcodes.length > 0 && statsMap.size > 0) {
+    userPrompt += formatMarketData(postcodes, statsMap)
+  }
 
   const response = await anthropic.messages.create({
     model: 'claude-sonnet-4-20250514',
