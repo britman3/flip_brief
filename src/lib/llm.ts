@@ -68,11 +68,8 @@ REQUIRED INPUTS:
 - Timeline: ${timelineLabel}
 - Risk tolerance: ${riskLabel}`
 
-  if (input.preferredCorridors && input.preferredCorridors.length > 0) {
-    const corridorLabels = input.preferredCorridors
-      .map((c) => DISPLAY_LABELS.corridors[c as keyof typeof DISPLAY_LABELS.corridors] || c)
-      .join(', ')
-    prompt += `\n- Preferred corridors: ${corridorLabels}`
+  if (input.preferredAreas) {
+    prompt += `\n- Preferred areas/corridors: ${input.preferredAreas}`
   }
 
   if (input.avoidAreas) {

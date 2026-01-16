@@ -15,7 +15,7 @@ export const WizardInputSchema = z.object({
   riskTolerance: z.enum(['low', 'medium', 'high']),
 
   // Optional fields
-  preferredCorridors: z.array(z.string()).optional(),
+  preferredAreas: z.string().optional(),
   avoidAreas: z.string().optional(),
   mustHaves: z.array(z.string()).optional(),
   listingLinks: z.array(z.string().url()).max(5).optional(),
@@ -148,18 +148,6 @@ export const DISPLAY_LABELS = {
     low: 'Low',
     medium: 'Medium',
     high: 'High',
-  },
-  corridors: {
-    herts: 'Hertfordshire',
-    beds: 'Bedfordshire',
-    bucks: 'Buckinghamshire',
-    oxon: 'Oxfordshire',
-    essex: 'Essex',
-    kent: 'Kent',
-    surrey: 'Surrey',
-    m1: 'M1 Corridor',
-    m4: 'M4 Corridor',
-    m40: 'M40 Corridor',
   },
   mustHaves: {
     garden: 'Garden',

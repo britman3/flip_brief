@@ -18,7 +18,7 @@ type FormData = {
   timeline: string
   riskTolerance: string
   // Optional
-  preferredCorridors: string[]
+  preferredAreas: string
   avoidAreas: string
   mustHaves: string[]
   listingLinks: string[]
@@ -35,7 +35,7 @@ const initialFormData: FormData = {
   renovationScope: '',
   timeline: '',
   riskTolerance: '',
-  preferredCorridors: [],
+  preferredAreas: '',
   avoidAreas: '',
   mustHaves: [],
   listingLinks: ['', '', '', '', ''],
@@ -54,7 +54,7 @@ export default function CreatePage() {
     setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
-  const toggleArrayField = (field: 'preferredCorridors' | 'mustHaves', value: string) => {
+  const toggleArrayField = (field: 'mustHaves', value: string) => {
     setFormData((prev) => {
       const current = prev[field]
       if (current.includes(value)) {
@@ -110,8 +110,7 @@ export default function CreatePage() {
         renovationScope: formData.renovationScope,
         timeline: formData.timeline,
         riskTolerance: formData.riskTolerance,
-        preferredCorridors:
-          formData.preferredCorridors.length > 0 ? formData.preferredCorridors : undefined,
+        preferredAreas: formData.preferredAreas || undefined,
         avoidAreas: formData.avoidAreas || undefined,
         mustHaves: formData.mustHaves.length > 0 ? formData.mustHaves : undefined,
         listingLinks: formData.listingLinks.filter((l) => l.trim()) || undefined,
@@ -377,24 +376,17 @@ export default function CreatePage() {
               <div className="space-y-6">
                 <div>
                   <label className="block text-sm font-medium text-brand-700 mb-2">
-                    Preferred corridors/counties
+                    Preferred areas/corridors
                   </label>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                    {Object.entries(DISPLAY_LABELS.corridors).map(([value, label]) => (
-                      <label
-                        key={value}
-                        className="flex items-center cursor-pointer p-2 rounded border border-brand-200 hover:bg-brand-50"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={formData.preferredCorridors.includes(value)}
-                          onChange={() => toggleArrayField('preferredCorridors', value)}
-                          className="mr-2"
-                        />
-                        <span className="text-sm">{label}</span>
-                      </label>
-                    ))}
-                  </div>
+                  <input
+                    type="text"
+                    value={formData.preferredAreas}
+                    onChange={(e) => updateField('preferredAreas', e.target.value)}
+                    placeholder="e.g. Greater Manchester, M62 corridor, West Yorkshire"
+                  />
+                  <p className="text-xs text-brand-400 mt-1">
+                    Counties, regions, or transport corridors you want to focus on
+                  </p>
                 </div>
 
                 <div>
