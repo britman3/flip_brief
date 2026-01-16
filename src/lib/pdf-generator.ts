@@ -56,7 +56,7 @@ export async function generatePdf(brief: BriefOutput): Promise<Uint8Array> {
   let y = A4_HEIGHT - MARGIN
 
   // === HEADER ===
-  page.drawText(`Flip Brief — ${brief.meta.starting_location}`, {
+  page.drawText(`Flip Brief - ${brief.meta.starting_location}`, {
     x: MARGIN,
     y,
     size: 18,
@@ -148,7 +148,7 @@ export async function generatePdf(brief: BriefOutput): Promise<Uint8Array> {
 
     // Why fit bullets
     for (const reason of area.why_fit.slice(0, 2)) {
-      page.drawText(`• ${truncate(reason, 55)}`, {
+      page.drawText(`- ${truncate(reason, 55)}`, {
         x: leftX + 8,
         y: leftY,
         size: 7,
@@ -161,7 +161,7 @@ export async function generatePdf(brief: BriefOutput): Promise<Uint8Array> {
     // Price ranges
     const entryRange = `Entry: ${formatCurrency(area.entry_price_range.low)}-${formatCurrency(area.entry_price_range.high)}`
     const resaleRange = `Resale: ${formatCurrency(area.resale_price_range.low)}-${formatCurrency(area.resale_price_range.high)}`
-    page.drawText(`${entryRange} → ${resaleRange}`, {
+    page.drawText(`${entryRange} -> ${resaleRange}`, {
       x: leftX + 8,
       y: leftY,
       size: 7,
@@ -225,7 +225,7 @@ export async function generatePdf(brief: BriefOutput): Promise<Uint8Array> {
   leftY -= 9
 
   for (const assumption of brief.numbers.assumptions.slice(0, 4)) {
-    page.drawText(`• ${truncate(assumption, 50)}`, {
+    page.drawText(`- ${truncate(assumption, 50)}`, {
       x: leftX,
       y: leftY,
       size: 6,
@@ -300,7 +300,7 @@ export async function generatePdf(brief: BriefOutput): Promise<Uint8Array> {
   for (let i = 0; i < keywords.length; i += 2) {
     const kw1 = keywords[i] || ''
     const kw2 = keywords[i + 1] || ''
-    page.drawText(`• ${truncate(kw1, 22)}`, {
+    page.drawText(`- ${truncate(kw1, 22)}`, {
       x: rightX,
       y: rightY,
       size: 6,
@@ -308,7 +308,7 @@ export async function generatePdf(brief: BriefOutput): Promise<Uint8Array> {
       color: BRAND_MEDIUM,
     })
     if (kw2) {
-      page.drawText(`• ${truncate(kw2, 22)}`, {
+      page.drawText(`- ${truncate(kw2, 22)}`, {
         x: rightX + COL_WIDTH / 2,
         y: rightY,
         size: 6,
@@ -330,7 +330,7 @@ export async function generatePdf(brief: BriefOutput): Promise<Uint8Array> {
   rightY -= 9
 
   for (const filter of brief.search_box.must_have_filters.slice(0, 4)) {
-    page.drawText(`• ${truncate(filter, 40)}`, {
+    page.drawText(`- ${truncate(filter, 40)}`, {
       x: rightX,
       y: rightY,
       size: 6,
@@ -351,7 +351,7 @@ export async function generatePdf(brief: BriefOutput): Promise<Uint8Array> {
     })
     rightY -= 9
     for (const note of brief.search_box.avoid_notes.slice(0, 2)) {
-      page.drawText(`• ${truncate(note, 40)}`, {
+      page.drawText(`- ${truncate(note, 40)}`, {
         x: rightX,
         y: rightY,
         size: 6,
@@ -423,7 +423,7 @@ export async function generatePdf(brief: BriefOutput): Promise<Uint8Array> {
   rightY -= 9
 
   for (const item of brief.next_actions.viewing_checklist.slice(0, 6)) {
-    page.drawText(`☐ ${truncate(item, 40)}`, {
+    page.drawText(`[ ] ${truncate(item, 40)}`, {
       x: rightX,
       y: rightY,
       size: 6,
@@ -444,7 +444,7 @@ export async function generatePdf(brief: BriefOutput): Promise<Uint8Array> {
     })
     rightY -= 9
     for (const note of brief.next_actions.calibration_notes.slice(0, 3)) {
-      page.drawText(`• ${truncate(note, 40)}`, {
+      page.drawText(`- ${truncate(note, 40)}`, {
         x: rightX,
         y: rightY,
         size: 6,
