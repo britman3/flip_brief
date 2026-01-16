@@ -1,36 +1,103 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Flip Brief Generator
+
+AI-powered one-page property flip briefs for UK investors. Enter your criteria and receive a downloadable PDF with location recommendations, deal maths, risks, and actionable next steps.
+
+## Features
+
+- **4-step wizard** with 14 questions covering location, budget, strategy, and preferences
+- **AI-generated briefs** using Claude for UK property market analysis
+- **Top 3 recommended areas** with postcode sectors and confidence ratings
+- **Quick deal maths** including purchase, refurb, costs, profit, and ROI estimates
+- **Risk assessment** with severity ratings and checks to investigate
+- **Search keywords** and agent call script for deal sourcing
+- **One-page PDF export** designed for easy printing and sharing
+
+## Tech Stack
+
+- **Framework**: Next.js 16 with App Router
+- **Styling**: Tailwind CSS v4
+- **AI**: Anthropic Claude API
+- **PDF**: pdf-lib
+- **Validation**: Zod
+- **Storage**: JSON file-based (development), can be swapped for database
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
+- Node.js 18+
+- Anthropic API key
+
+### Installation
+
+1. Clone the repository:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/britman3/flip_brief.git
+cd flip_brief
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Install dependencies:
+```bash
+npm install
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. Create environment file:
+```bash
+cp .env.example .env
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+4. Add your Anthropic API key to `.env`:
+```
+ANTHROPIC_API_KEY=your-api-key-here
+```
 
-## Learn More
+5. Run the development server:
+```bash
+npm run dev
+```
 
-To learn more about Next.js, take a look at the following resources:
+6. Open [http://localhost:3000](http://localhost:3000) in your browser
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Project Structure
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+src/
+├── app/
+│   ├── api/brief/          # API routes for brief generation
+│   ├── create/             # Wizard page
+│   ├── result/[id]/        # Results page
+│   ├── globals.css         # Tailwind styles
+│   ├── layout.tsx          # Root layout
+│   └── page.tsx            # Home page
+├── lib/
+│   ├── db.ts               # JSON file storage
+│   ├── llm.ts              # Claude API integration
+│   ├── pdf-generator.ts    # PDF generation with pdf-lib
+│   └── schema.ts           # Zod schemas and types
+data/                       # JSON storage (gitignored)
+```
 
-## Deploy on Vercel
+## API Endpoints
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- `POST /api/brief` - Create new brief (triggers AI generation)
+- `GET /api/brief/[id]` - Get brief by ID
+- `GET /api/brief/[id]/pdf` - Download brief as PDF
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Deployment
+
+### Build for production:
+```bash
+npm run build
+npm start
+```
+
+### Environment variables for production:
+- `ANTHROPIC_API_KEY` - Required for AI brief generation
+
+## Disclaimer
+
+This tool provides estimates based on AI analysis. Always verify with sold comps and professional advice before making offers on properties.
+
+## License
+
+Created by Property Know How.
